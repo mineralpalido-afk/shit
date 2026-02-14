@@ -1,0 +1,24 @@
+{
+  "movies": [
+    {
+      "id": "m1",
+      "title": "Película Uno",
+      "description": "Descripción corta de la película uno.",
+      "poster": "https://via.placeholder.com/300x450",
+      "paths": {
+        "Servidor A": "pelicula-uno",
+        "Servidor B": "movie-one"
+      }
+    },
+    {
+      "id": "m2",
+      "title": "Película Dos",
+      "description": "Otra descripción breve.",
+      "poster": "https://via.placeholder.com/300x450",
+      "paths": {
+        "Servidor A": "pelicula-dos",
+        "Servidor B": "movie-two"
+      }
+    }
+  ]
+}
