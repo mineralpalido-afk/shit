@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Movie App</title>
+
+<link rel="manifest" href="manifest.json">
+
+<style>
+:root{
+  --bg:#0f0f0f;--card:#1a1a1a;--text:#fff;--muted:#aaa;--accent:#e50914;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:system-ui,-apple-system,sans-serif;
+}
+header{
+  padding:14px;font-weight:700;font-size:18px;
+  position:sticky;top:0;background:#0f0f0fee;z-index:10;
+}
+input,select,button{
+  width:100%;padding:10px;border-radius:8px;border:none;
+  font-size:14px;
+}
+.section{padding:14px}
+.row{display:flex;gap:12px;overflow-x:auto}
+.card{
+  min-width:120px;background:var(--card);border-radius:10px;
+  overflow:hidden;cursor:pointer;
+}
+.card img{width:100%;display:block}
+.card span{
+  display:block;padding:6px;text-align:center;font-size:12px;
+}
+.modal,.player{
+  position:fixed;inset:0;background:rgba(0,0,0,.9);
+  display:none;z-index:20;
+}
+.modal.active,.player.active{display:flex}
+.modal-content{
+  margin:auto;background:var(--card);padding:16px;
+  width:90%;max-width:420px;border-radius:12px;
+}
+.modal-content img{width:100%;border-radius:8px}
+.modal-content p{color:var(--muted);font-size:14px}
+.actions{margin-top:10px;display:flex;gap:10px}
+.actions button{flex:1}
+.play{background:var(--accent);color:#fff}
+.player iframe{width:100%;height:100%;border:none}
+.close{
+  position:absolute;top:12px;right:12px;
+  background:#000a;color:#fff;border:none;
+  padding:8px 12px;border-radius:20px;z-index:30;
+}
+</style>
+</head>
+
+<body>
+
+<header>🎬 Movie App</header>
+
+<div class="section">
+  <input id="serverInput" placeholder="Servidor embed (https://...)">
+</div>
+
+<div class="section">
+  <input id="search" placeholder="Buscar película...">
+</div>
+
+<div class="section">
+  <div class="row" id="catalog"></div>
+</div>
+
+<!-- DETALLE -->
+<div class="modal" id="detail">
+  <div class="modal-content">
+    <img id="dPoster">
+    <h3 id="dTitle"></h3>
+    <p id="dDesc"></p>
+
+    <select id="serverSelect"></select>
+
+    <div class="actions">
+      <button class="play" onclick="play()">▶ Reproducir</button>
+    </div>
+  </div>
+</div>
+
+<!-- PLAYER -->
+<div class="player" id="player">
+  <button class="close" onclick="closePlayer()">✕</button>
+  <iframe id="frame" allow="autoplay;fullscreen" allowfullscreen></iframe>
+</div>
+
+<script>
+const catalog=document.getElementById("catalog");
+const search=document.getElementById("search");
+const serverInput=document.getElementById("serverInput");
+const serverSelect=document.getElementById("serverSelect");
+const detail=document.getElementById("detail");
+const player=document.getElementById("player");
+const frame=document.getElementById("frame");
+
+let movies=[],current=null;
+
+// LOCALSTORAGE SERVER
+serverInput.value=localStorage.getItem("server")||"";
+serverInput.addEventListener("change",()=>{
+  localStorage.setItem("server",serverInput.value.trim());
+});
+
+// LOAD JSON
+fetch("movies.json")
+.then(r=>r.json())
+.then(d=>{
+  movies=d.movies;
+  render(movies);
+});
+
+function render(list){
+  catalog.innerHTML="";
+  list.forEach(m=>{
+    const c=document.createElement("div");
+    c.className="card";
+    c.innerHTML=`<img src="${m.poster}"><span>${m.title}</span>`;
+    c.onclick=()=>openDetail(m);
+    catalog.appendChild(c);
+  });
+}
+
+// SEARCH
+search.addEventListener("input",e=>{
+  const q=e.target.value.toLowerCase();
+  render(movies.filter(m=>m.title.toLowerCase().includes(q)));
+});
+
+function openDetail(movie){
+  current=movie;
+  dPoster.src=movie.poster;
+  dTitle.textContent=movie.title;
+  dDesc.textContent=movie.description;
+  serverSelect.innerHTML="";
+  Object.entries(movie.paths).forEach(([name,path])=>{
+    const o=document.createElement("option");
+    o.value=path;o.textContent=name;
+    serverSelect.appendChild(o);
+  });
+  detail.classList.add("active");
+}
+
+function play(){
+  const base=serverInput.value.trim();
+  if(!base){alert("Ingresa un servidor");return;}
+  frame.src=base+serverSelect.value;
+  detail.classList.remove("active");
+  player.classList.add("active");
+}
+
+function closePlayer(){
+  frame.src="";
+  player.classList.remove("active");
+}
+
+detail.onclick=e=>{
+  if(e.target===detail)detail.classList.remove("active");
+};
+</script>
+
+</body>
+</html>
